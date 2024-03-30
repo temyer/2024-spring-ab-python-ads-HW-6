@@ -65,7 +65,7 @@ containerLifecycleHooks: {}
 airflowHome: /opt/airflow
 
 # Default airflow repository -- overridden by all the specific images below
-defaultAirflowRepository: apache/airflow
+defaultAirflowRepository: custom-airflow
 
 # Default airflow tag to deploy
 defaultAirflowTag: "2.8.2"
@@ -616,7 +616,7 @@ workers:
 
   persistence:
     # Enable persistent volumes
-    enabled: true
+    enabled: false
     # Volume size for worker StatefulSet
     size: 100Gi
     # If using a custom storageClass, pass name ref to all statefulSets here
@@ -1424,7 +1424,7 @@ triggerer:
 
   persistence:
     # Enable persistent volumes
-    enabled: true
+    enabled: false
     # Volume size for triggerer StatefulSet
     size: 100Gi
     # If using a custom storageClass, pass name ref to all statefulSets here
@@ -2139,7 +2139,7 @@ redis:
 
   persistence:
     # Enable persistent volumes
-    enabled: true
+    enabled: false
     # Volume size for worker StatefulSet
     size: 1Gi
     # If using a custom storageClass, pass name ref to all statefulSets here

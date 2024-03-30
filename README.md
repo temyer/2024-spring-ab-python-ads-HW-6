@@ -15,15 +15,29 @@ kind create cluster --name airflow-cluster --config kind-cluster.yaml
 
 kubectl create namespace airflow
 
+\# Необходимо добавить публичный ssh ключ в deploy keys гит репозитория  
 kubectl --namespace airflow create secret generic airflow-ssh --from-file=gitSshKey=<PATH_TO_YOUR_PRIVATE_SSH_KEY>
 
-cd airflow && helm upgrade --install -f values.yaml \
+\# Собираем кастомный образ airflow  
+docker build -t custom-airflow:2.8.2 . -f airflow.Dockerfile
+
+\# Пушим собранный образ в kind  
+kind load docker-image custom-airflow:2.8.2 --name airflow-cluster
+
+\# Деплоим airflow(с папки airflow)
+helm upgrade --install -f values.yaml \
 --set data.metadataConnection.user=postgres \
 --set data.metadataConnection.pass=postgres \
 --set data.metadataConnection.db=postgres \
 --set webserverSecretKey=94e86f1d2854d6792e554794915f521d \
 --namespace airflow \
 airflow .
+
+\# Собираем образ для нашего DAG-a(с папки dags)
+docker build -t model-train:1.0.0 . -f train.Dockerfile
+
+\# Пушим собранный образ в kind  
+kind load docker-image model-train:1.0.0 --name airflow-cluster
 
 Для доступа к интерфейсу airflow:  
 kubectl port-forward svc/airflow-webserver 8080:8080 --namespace airflow
