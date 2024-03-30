@@ -1,0 +1,2 @@
+catboost==1.2.3
+scikit-uplift==0.5.1
