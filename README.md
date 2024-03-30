@@ -33,7 +33,7 @@ helm upgrade --install -f values.yaml \
 --namespace airflow \
 airflow .
 
-\# Собираем образ для нашего DAG-a(с папки dags)
+\# Собираем образ для нашего DAG-a(с папки dags)  
 docker build -t model-train:1.0.0 . -f train.Dockerfile
 
 \# Пушим собранный образ в kind  

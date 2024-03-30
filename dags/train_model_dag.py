@@ -17,9 +17,11 @@ with DAG(
         image="model-train:1.0.0",
         command="python train_model.py",
         container_name="uplift_model_train",
+        docker_url="unix://var/run/docker.sock",
         network_mode="bridge",
         api_version="auto",
         auto_remove=True,
+        mount_tmp_dir=False,
     )
 
     start >> model_train
