@@ -20,6 +20,7 @@ with DAG(
         name="model_train",
         task_id="model_train",
         get_logs=True,
+        on_finish_action="keep_pod",
     )
 
     start >> model_train
