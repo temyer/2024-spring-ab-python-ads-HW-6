@@ -4,6 +4,9 @@ from sklearn.model_selection import train_test_split
 from sklift.datasets import fetch_x5, clear_data_dir
 import pandas as pd
 from sklift.viz import plot_uplift_curve
+import boto3
+import joblib
+import tempfile
 
 
 class UpliftPipeline:
@@ -15,11 +18,23 @@ class UpliftPipeline:
     def data_loaded(self):
         return os.path.exists(self.features_path) and os.path.exists(self.train_path)
 
+    def load_model(self, key):
+        session = boto3.session.Session()
+        s3 = session.client(
+            service_name="s3",
+            endpoint_url="https://storage.my_s3_storage.com",
+        )
+
+        with tempfile.TemporaryFile() as fp:
+            s3.download_fileobj(Fileobj=fp, Bucket="BUCKET_NAME", Key=key)
+            fp.seek(0)
+            model = joblib.load(fp)
+
+        self.model = model
+
     def load_data(self):
         clear_data_dir()
         dataset = fetch_x5()
-
-        print("load_data")
 
         data, target, treatment = dataset.data, dataset.target, dataset.treatment
 
@@ -71,15 +86,16 @@ class UpliftPipeline:
 
         self.X_test = self.df_features.loc[indices_test, :]
 
-    def train_and_evaluate_model(self, init_model, **kwargs):
-        model = init_model.fit(
+    def train_model(self, init_model, **kwargs):
+        self.model = init_model.fit(
             self.X_train,
             self.y_train,
             self.treat_train,
             **kwargs,
         )
 
-        uplift_preds = model.predict(self.X_val)
+    def evaluate_model(self):
+        uplift_preds = self.model.predict(self.X_val)
 
         return plot_uplift_curve(
             y_true=self.y_val,

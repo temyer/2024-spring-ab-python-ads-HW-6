@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from sklift.models import SoloModel, TwoModels
 from catboost import CatBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 from train import UpliftPipeline
 
@@ -38,8 +39,16 @@ def eda_view(context):
             st.write(df.isnull().sum())
 
 
-def train_view(context):
+def model_view(context):
     pipe = context["pipe"]
+
+    if st.button("Load Logged Solo Model"):
+        st.write("Downloading model...")
+        pipe.load_model("solo_model")
+
+    if st.button("Load Logged Two Model"):
+        st.write("Downloading model...")
+        pipe.load_model("two_model")
 
     if not pipe.data_loaded:
         if st.button("Load Data"):
@@ -66,27 +75,41 @@ def train_view(context):
             st.write("y_val: ", pipe.y_val.shape)
 
         approach_name = st.selectbox("Approach", ["Solo Model", "Two Models"])
-        classifier_name = st.selectbox("Classifier", ["CatBoostClassifier"])
+        classifier_name = st.selectbox(
+            "Classifier", ["CatBoostClassifier", "RandomForestClassifier"]
+        )
 
         if approach_name == "Solo Model":
-            init_model = SoloModel(estimator=CatBoostClassifier(**params))
-            fig = pipe.train_and_evaluate_model(
+            if classifier_name == "CatBoostClassifier":
+                init_model = SoloModel(estimator=CatBoostClassifier(**params))
+            else:
+                init_model = SoloModel(estimator=RandomForestClassifier(**params))
+
+            pipe.train_model(
                 init_model,
                 estimator_fit_params={"cat_features": ["gender"]},
             )
-        elif approach_name == "Two Models":
-            init_model = TwoModels(
-                estimator_trmnt=CatBoostClassifier(**params),
-                estimator_ctrl=CatBoostClassifier(**params),
-                method="vanilla",
-            )
 
-            fig = pipe.train_and_evaluate_model(
+        elif approach_name == "Two Models":
+            if classifier_name == "CatBoostClassifier":
+                init_model = TwoModels(
+                    estimator_trmnt=CatBoostClassifier(**params),
+                    estimator_ctrl=CatBoostClassifier(**params),
+                    method="vanilla",
+                )
+            else:
+                init_model = TwoModels(
+                    estimator_trmnt=RandomForestClassifier(**params),
+                    estimator_ctrl=RandomForestClassifier(**params),
+                    method="vanilla",
+                )
+            pipe.train_model(
                 init_model,
                 estimator_trmnt_fit_params={"cat_features": ["gender"]},
                 estimator_ctrl_fit_params={"cat_features": ["gender"]},
             )
 
+        fig = pipe.evaluate_model()
         st.pyplot(fig)
 
 
@@ -106,7 +129,7 @@ def main():
     if app_mode == "EDA":
         eda_view(context)
     elif app_mode == "Train Model":
-        train_view(context)
+        model_view(context)
 
 
 if __name__ == "__main__":

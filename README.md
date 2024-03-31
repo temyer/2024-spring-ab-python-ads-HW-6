@@ -7,7 +7,9 @@
 1. Реализован дэшборд с необходимым функционалом - +3 балла
 1. Реализован Dockerfile для дэшборда - +1 балл
 1. Выполнен запуск и конфигурация Airflow в kind (приложить скрины Airflow webserver) - +4 балла
-1. Реализован ежедневный запуск с помощью DockerOperator - +2 балла
+1. Реализован ежедневный запуск с помощью ~~DockerOperator~~ KubernetesPodOperator - +2 балла
+
+P.S. DockerOperator запускать в airflow, который в Kubernetes оказалось тяжко и в целом антипаттерн, поэтому я выбрал KubernetesPodOperator
 
 ### Подготовка airflow in kind
 
@@ -39,7 +41,25 @@ docker build -t model-train:1.0.0 . -f train.Dockerfile
 \# Пушим собранный образ в kind  
 kind load docker-image model-train:1.0.0 --name airflow-cluster
 
-Для доступа к интерфейсу airflow:  
+\#Для доступа к интерфейсу airflow:  
 kubectl port-forward svc/airflow-webserver 8080:8080 --namespace airflow
 
-###
+### Подготовка streamlit in kind
+
+\# Собираем образ streamlit(с папки streamlit)  
+docker build -t custom-streamlit:1.0.0 . -f Dockerfile
+
+\# Пушим собранный образ в kind  
+kind load docker-image custom-streamlit:1.0.0 --name airflow-cluster
+
+\# Деплоим airflow(с папки streamlit/deploy)
+helm upgrade --install -f values.yaml \
+--namespace airflow \
+streamlit .
+
+\#Для доступа к интерфейсу streamlit:  
+kubectl port-forward svc/streamlit-service 8501:8501 --namespace airflow
+
+### Скриншот из интерфейса airflow
+
+![Alt text](./Screenshot_2024-03-31_06-06-13.png?raw=true "Airflow Dag")

@@ -1,0 +1,5 @@
+image: custom-streamlit:1.0.0
+
+limits:
+  memory:
+  cpu:
