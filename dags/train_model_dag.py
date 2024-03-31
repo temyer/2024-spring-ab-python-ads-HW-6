@@ -14,8 +14,8 @@ with DAG(
 
     model_train = DockerOperator(
         task_id="model_train",
-        image="model-train:1.0.0",
-        command="python train_model.py",
+        image="ubuntu:latest",
+        command="echo 123",
         container_name="uplift_model_train",
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge",
