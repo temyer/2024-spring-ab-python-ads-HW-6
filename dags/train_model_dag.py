@@ -14,9 +14,8 @@ with DAG(
 
     model_train = KubernetesPodOperator(
         namespace="airflow",
-        image="ubuntu:latest",
-        cmds=["python", "-c"],
-        arguments=["print('hello world')"],
+        image="model-train:1.0.0",
+        cmds=["python", "train_model.py"],
         name="model_train",
         task_id="model_train",
         get_logs=True,
